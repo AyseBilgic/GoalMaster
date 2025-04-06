@@ -1,22 +1,29 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_application1/views/add_goal/add_goal_screen.dart';
+// lib/routes/app_routes.dart
+import 'package:flutter/widgets.dart';
+// Ekranları import et
+import 'package:flutter_application1/views/splash/splash_screen.dart';
+import 'package:flutter_application1/views/login/login_screen.dart';
+import 'package:flutter_application1/views/register/register_screen.dart';
 import 'package:flutter_application1/views/home/home_screen.dart';
-import 'package:flutter_application1/views/login/login_screen.dart'; // Yeni
-import 'package:flutter_application1/views/register/register_screen.dart'; // Yeni
-import 'package:flutter_application1/views/splash_screen.dart'; // Yeni (isteğe bağlı)
+import 'package:flutter_application1/views/add_goal/add_goal_screen.dart';
 
 class AppRoutes {
+  // Rota isimleri
+  static const String splash = '/'; // Düzeltme: Başlangıç rotası '/' olmalı
+  static const String login = '/login';
+  static const String register = '/register';
   static const String home = '/home';
   static const String addGoal = '/add_goal';
-  static const String login = '/login'; // Yeni
-  static const String register = '/register'; // Yeni
-  static const String splash = '/splash'; // Yeni (isteğe bağlı)
 
-  static Map<String, WidgetBuilder> routes = {
-    home: (context) => const HomeScreen(),
-    addGoal: (context) => const AddGoalScreen(),
-    login: (context) => const LoginScreen(), // Yeni
-    register: (context) => const RegisterScreen(), // Yeni
-    splash: (context) => const SplashScreen(), // Yeni (isteğe bağlı)
-  };
+  // Rotalar map'i
+  static Map<String, WidgetBuilder> get routes {
+    return {
+      // Düzeltme: '/' rotası için SplashScreen tanımlı olmalı
+      splash: (context) => const SplashScreen(),
+      login: (context) => const LoginScreen(),
+      register: (context) => const RegisterScreen(),
+      home: (context) => const HomeScreen(),
+      addGoal: (context) => const AddGoalScreen(),
+    };
+  }
 }

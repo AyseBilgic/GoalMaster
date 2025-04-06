@@ -1,60 +1,78 @@
+// lib/models/goal.dart
+
 class Goal {
-  final String id;
-  final String title;
-  final String description;
-  final DateTime dueDate;
-  final String category;
-  bool isCompleted; // Tamamlandı mı?
+  final int goalId;       // BIGINT -> int
+  final int userId;       // BIGINT -> int
+  final String title;      // VARCHAR -> String
+  final String? description; // TEXT -> String? (nullable)
+  final DateTime? targetDate;// DATE -> DateTime? (nullable)
+  final bool isCompleted;  // TINYINT(1) -> bool
+  final String? category;   // VARCHAR -> String? (nullable)
+  final double progress;   // FLOAT -> double
+  final DateTime? createdAt; // TIMESTAMP -> DateTime?
+  final DateTime? updatedAt; // TIMESTAMP -> DateTime?
 
   Goal({
-    required this.id,
+    required this.goalId,
+    required this.userId,
     required this.title,
-    required this.description,
-    required this.dueDate,
-    required this.category,
-    this.isCompleted = false,
+    this.description,
+    this.targetDate,
+    required this.isCompleted, // DB'de DEFAULT 0 var
+    this.category,
+    required this.progress, // DB'de DEFAULT 0.0 var
+    this.createdAt,
+    this.updatedAt,
   });
 
-    // Veritabanından/API'den gelen JSON'ı Goal nesnesine çevirme:
+  // API'den gelen JSON Map'ini Goal objesine çevirir
   factory Goal.fromJson(Map<String, dynamic> json) {
     return Goal(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      dueDate: DateTime.parse(json['dueDate']),
-      category: json['category'],
-      isCompleted: json['isCompleted'] ?? false, // null gelirse false olsun
+      goalId: _parseInt(json['goal_id']),
+      userId: _parseInt(json['user_id']),
+      title: json['title'] ?? 'Başlık Yok',
+      description: json['description'] as String?,
+      targetDate: _parseDate(json['target_date']),
+      isCompleted: _parseBool(json['is_completed']),
+      category: json['category'] as String?,
+      progress: _parseDouble(json['progress']),
+      createdAt: _parseDate(json['created_at']),
+      updatedAt: _parseDate(json['updated_at']),
     );
   }
 
-    // Goal nesnesini JSON'a çevirme (API'ye göndermek için)
+  // Goal objesini API'ye göndermek için JSON'a çevirir (POST/PUT için)
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'user_id': userId, // API user_id bekliyorsa
       'title': title,
       'description': description,
-      'dueDate': dueDate.toIso8601String(), // Tarihi string olarak kaydet
+      'target_date': targetDate?.toIso8601String().split('T')[0], // YYYY-MM-DD
+      'is_completed': isCompleted ? 1 : 0, // TINYINT(1) için 0/1
       'category': category,
-      'isCompleted': isCompleted,
+      'progress': progress,
     };
   }
 
-  //CopyWith methodu.  State management kullanırken nesneleri değiştirmek (immutable) için.
-    Goal copyWith({
-    String? id,
-    String? title,
-    String? description,
-    DateTime? dueDate,
-    String? category,
-    bool? isCompleted,
-  }) {
-    return Goal(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      dueDate: dueDate ?? this.dueDate,
-      category: category ?? this.category,
-      isCompleted: isCompleted ?? this.isCompleted,
-    );
+  // --- Statik Yardımcı Parse Fonksiyonları ---
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0; if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is double) return value.toInt(); return 0;
+  }
+  static bool _parseBool(dynamic value) {
+    if (value == null) return false; if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1'; return false;
+  }
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0; if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0; return 0.0;
+  }
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null || value.toString().isEmpty) return null;
+    // Hem 'YYYY-MM-DD' hem de ISO formatını deneyebilir
+    return DateTime.tryParse(value.toString());
   }
 }
