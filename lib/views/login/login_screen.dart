@@ -1,12 +1,11 @@
 // lib/views/login/login_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_application1/providers/auth_provider.dart';
-import 'package:flutter_application1/routes/app_routes.dart'; // Rotalar için
+import 'package:flutter_application1/routes/app_routes.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -15,143 +14,89 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true; // Şifre görünürlüğü için
 
   @override
-  void dispose() {
+   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
-    super.dispose();
-  }
-
-  // Giriş yapma fonksiyonu
-  Future<void> _submitLogin() async {
-    // Klavyeyi kapat
-    FocusScope.of(context).unfocus();
-
-    if (_formKey.currentState!.validate()) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.login(
-        _usernameController.text.trim(),
-        _passwordController.text.trim(),
-      );
-
-      // Giriş başarılıysa ve widget hala ekrandaysa Ana ekrana git
-      if (success && mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      }
-      // Hata mesajı zaten AuthProvider dinlenerek gösterilecek (build metodu içinde)
-    }
+    super.dispose(); // <-- BU SATIR ÇOK ÖNEMLİ!
   }
 
   @override
   Widget build(BuildContext context) {
-    // AuthProvider'ı dinle (isLoading ve errorMessage için)
-    final authProvider = context.watch<AuthProvider>();
+    // Hem state'i dinlemek hem de metot çağırmak için
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      // AppBar isteğe bağlı, kaldırılabilir
-      // appBar: AppBar(
-      //   title: const Text('Giriş Yap'),
-      // ),
-      body: Center( // İçeriği ortalamak için
-        child: SingleChildScrollView( // Klavye açılınca taşmayı engeller
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Dikeyde ortala
-              crossAxisAlignment: CrossAxisAlignment.stretch, // Yatayda genişlet
-              children: [
-                // Logo veya Başlık (Opsiyonel)
-                Icon(Icons.track_changes, size: 80, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(height: 16),
-                Text(
-                  'GoalMaster\'a Hoş Geldiniz!',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 32),
+      // AppBar yerine doğrudan body kullanabiliriz
+      // appBar: AppBar(title: const Text('Giriş Yap')),
+      body: SafeArea( // Ekran çentikleri vb. için
+        child: Center(
+          child: SingleChildScrollView( // Klavye açılınca taşmayı önler
+            padding: const EdgeInsets.all(32.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch, // Butonları genişletir
+                children: [
+                  // Logo veya Başlık
+                  Icon(Icons.track_changes, size: 80, color: Theme.of(context).primaryColor),
+                  const SizedBox(height: 20),
+                  Text('GoalMaster\'a Hoş Geldiniz!', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 40),
 
-                // Kullanıcı Adı Alanı
-                TextFormField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Kullanıcı Adı',
-                    prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(),
+                  // Kullanıcı Adı
+                  TextFormField(
+                    controller: _usernameController,
+                    decoration: const InputDecoration( labelText: 'Kullanıcı Adı', prefixIcon: Icon(Icons.person_outline), border: OutlineInputBorder(), ),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Kullanıcı adı gerekli' : null,
                   ),
-                  keyboardType: TextInputType.text,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Lütfen kullanıcı adınızı girin';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Şifre Alanı
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Şifre',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    // Şifreyi göster/gizle butonu
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
+                  // Şifre
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration( labelText: 'Şifre', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder(), ),
+                    obscureText: true,
+                    validator: (value) => (value == null || value.isEmpty) ? 'Şifre gerekli' : null,
                   ),
-                  obscureText: _obscurePassword, // Şifreyi gizle
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Lütfen şifrenizi girin';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Giriş Butonu veya Yükleme İndikatörü
-                authProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton.icon(
-                      icon: const Icon(Icons.login),
-                      label: const Text('Giriş Yap'),
-                      onPressed: _submitLogin, // Giriş fonksiyonunu çağır
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                  // Hata Mesajı Alanı
+                  if (authProvider.errorMessage != null) ...[
+                    Text( authProvider.errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center,),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // Giriş Butonu (Yükleme durumu ile)
+                  authProvider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ElevatedButton.icon(
+                        icon: const Icon(Icons.login),
+                        label: const Text('Giriş Yap'),
+                        onPressed: () async {
+                          // Klavyeyi kapat
+                          FocusScope.of(context).unfocus();
+                          if (_formKey.currentState!.validate()) {
+                            bool success = await authProvider.login( _usernameController.text.trim(), _passwordController.text, );
+                            if (success && mounted) { // mounted kontrolü
+                              Navigator.pushReplacementNamed(context, AppRoutes.home);
+                            }
+                            // Hata mesajı zaten provider tarafından gösterilecek
+                          }
+                        },
+                        style: ElevatedButton.styleFrom( padding: const EdgeInsets.symmetric(vertical: 12), textStyle: const TextStyle(fontSize: 16) ),
                       ),
-                    ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                 // Hata Mesajı Alanı
-                 if (authProvider.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        authProvider.errorMessage!,
-                        style: TextStyle(color: Theme.of(context).colorScheme.error),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                // Kayıt Ol Butonu
-                TextButton(
-                  onPressed: authProvider.isLoading ? null : () { // Yükleniyorsa butonu devre dışı bırak
-                    Navigator.pushNamed(context, AppRoutes.register);
-                  },
-                  child: const Text('Hesabınız yok mu? Kaydolun'),
-                ),
-              ],
+                  // Kayıt Ol Butonu
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                    child: const Text('Hesabınız yok mu? Kaydolun'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
